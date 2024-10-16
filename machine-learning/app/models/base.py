@@ -8,11 +8,13 @@ from typing import Any, ClassVar
 from huggingface_hub import snapshot_download
 
 import ann.ann
+import rknn.rknn
 from app.sessions.ort import OrtSession
 
 from ..config import clean_name, log, settings
 from ..schemas import ModelFormat, ModelIdentity, ModelSession, ModelTask, ModelType
 from ..sessions.ann import AnnSession
+from ..sessions.rknn import RKNNSession
 
 
 class InferenceModel(ABC):
@@ -106,6 +108,8 @@ class InferenceModel(ABC):
         match model_path.suffix:
             case ".armnn":
                 session: ModelSession = AnnSession(model_path)
+            case ".rknn":
+                session = RKNNSession(model_path)
             case ".onnx":
                 session = OrtSession(model_path)
             case _:
@@ -155,4 +159,9 @@ class InferenceModel(ABC):
 
     @property
     def _model_format_default(self) -> ModelFormat:
-        return ModelFormat.ARMNN if ann.ann.is_available and settings.ann else ModelFormat.ONNX
+        if ann.ann.is_available and settings.ann :
+            return ModelFormat.ARMNN
+        elif rknn.rknn.is_available and settings.rknn:
+            return ModelFormat.RKNN
+        else:
+            ModelFormat.ONNX

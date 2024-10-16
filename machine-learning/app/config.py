@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     model_inter_op_threads: int = 0
     model_intra_op_threads: int = 0
     ann: bool = True
+    rknn: bool = True
     ann_fp16_turbo: bool = False
     ann_tuning_level: int = 2
     preload: PreloadModelData | None = None
