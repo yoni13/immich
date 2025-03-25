@@ -1,6 +1,22 @@
 from pathlib import Path
 
+from numpy import cumsum
+from rknn.api.custom_op import get_node_attr
+
 from .constants import RKNN_SOCS
+
+
+class CumSum:
+    # custom operator CumSum
+    op_type = "CumSum"
+
+    def shape_infer(self, node, in_shapes, in_dtypes):
+        return in_shapes.copy(), in_dtypes.copy()
+
+    def compute(self, node, inputs):
+        x = inputs[0]
+        axis = get_node_attr(node, "axis")
+        return [cumsum(x, axis=axis)]
 
 
 def _export_platform(
@@ -29,6 +45,12 @@ def _export_platform(
         enable_flash_attention=False,
         model_pruning=True,
     )
+
+    ret = rknn.reg_custom_op(CumSum)
+
+    if ret != 0:
+        raise RuntimeError("Register Custom OP failed!")
+
     ret = rknn.load_onnx(model=input_path.as_posix(), inputs=inputs, input_size_list=input_size_list)
 
     if ret != 0:
